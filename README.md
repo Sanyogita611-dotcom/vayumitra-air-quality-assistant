@@ -7,7 +7,7 @@
 3. **Clear Quantified Impact Insights** (weekly kg CO₂ saved, daily PM2.5 / cigarette-equivalent exposure drop, monthly ₹ fuel savings, annual tree equivalents)
 4. **Inclusive Voice & Camera Guidance** (hands-free voice chat, synchronized word-by-word TTS, photo check of sky smog or rooms, and 1-tap WhatsApp family alerts)
 
-> **Live Deployment:** _Add your deployed HTTPS URL here (e.g., `https://vayumitra-air-quality.onrender.com` or Cloud Run URL)_
+> **Live Deployment:** https://vayumitra-air-quality-assistant.onrender.com
 > **Security Note:** API keys are **never exposed to or entered in the browser**. All secrets stay strictly server-side in `.env` (local) or cloud environment secrets (production), and REST calls authenticate via the `x-goog-api-key` header with sanitized error handling.
 
 ---
