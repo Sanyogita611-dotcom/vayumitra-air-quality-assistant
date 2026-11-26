@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+    } catch (_) {}
+  </script>
+  <link rel="icon" href="/favicon.ico" type="image/svg+xml" />
+  <title>VayuMitra AI — Bolo Aur Suno • Urban Air Quality Companion</title>
+  <link rel="stylesheet" href="/styles.css?v=4" />
+</head>
+
+<body data-aqi-theme="caution">
+  <!-- Lightweight Live AQI-Reactive Atmospheric Sky, Breeze Ribbons & Urban Skyline Backdrop -->
+  <div class="ambient-backdrop" aria-hidden="true">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+    <svg class="skyline-art" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMax slice" focusable="false">
+      <!-- Gentle flowing breeze ribbons -->
+      <path class="breeze-line breeze-1" d="M-80 110 C 220 45, 520 175, 860 95 C 1120 35, 1300 120, 1520 70" />
+      <path class="breeze-line breeze-2" d="M-60 175 C 260 120, 560 225, 920 150 C 1180 95, 1340 185, 1520 135" />
+      <!-- Distant city hills & haze layer -->
+      <path class="skyline-far" d="M0 320 L0 235 L70 235 L70 190 L125 190 L125 220 L185 220 L185 165 L245 165 L245 215 L315 215 L315 150 L365 150 L365 130 L385 130 L385 150 L425 150 L425 225 L510 225 L510 175 L575 175 L575 210 L650 210 L650 145 L725 145 L725 205 L815 205 L815 160 L885 160 L885 220 L965 220 L965 138 L1035 138 L1035 195 L1120 195 L1120 155 L1195 155 L1195 215 L1280 215 L1280 170 L1365 170 L1365 225 L1440 225 L1440 320 Z" />
+      <!-- Foreground trees & clean green canopy silhouette -->
+      <path class="skyline-trees" d="M0 320 L0 278 Q 45 248, 92 272 Q 140 240, 195 270 Q 250 250, 305 278 Q 370 245, 435 276 Q 515 252, 585 278 Q 655 242, 730 274 Q 805 250, 880 278 Q 955 246, 1030 276 Q 1110 248, 1185 274 Q 1260 244, 1340 274 Q 1395 252, 1440 272 L1440 320 Z" />
+    </svg>
+  </div>
+  <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
+  <div id="sr-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">🌬️</div>
+      <div>
+        <div class="brand-title-row">
+          <h1 id="brand-title">VayuMitra (वायुमित्र)</h1>
+          <span id="api-status-badge" class="api-status-badge demo">Checking...</span>
+        </div>
+        <p id="brand-subtitle">Bolo Aur Suno • Aasan Hawa Suraksha Sathi</p>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="control-group" id="location-control-group" title="Auto-detected via GPS; type any locality or pincode and press Enter">
+        <label for="city-input" id="gps-status-label">📡 GPS...</label>
+        <input type="text" id="city-input" name="city" class="city-input" value="Locating..."
+          autocomplete="address-level2" autocorrect="off" spellcheck="false" enterkeyhint="search" />
+        <button type="button" id="refresh-gps-btn" class="icon-btn" aria-label="Re-detect live GPS location" title="Re-detect live GPS location">🔄</button>
+      </div>
+
+      <div class="control-group">
+        <label for="lang-select" id="lang-label">🗣️ Bhasha:</label>
+        <select id="lang-select" name="language">
+          <option value="Hinglish" data-bcp47="hi-IN" selected>Hinglish (आसान बोलचाल)</option>
+          <option value="Hindi" data-bcp47="hi-IN">हिंदी (सरल हिंदी)</option>
+          <option value="Marathi" data-bcp47="mr-IN">मराठी (सोपी मराठी)</option>
+          <option value="English" data-bcp47="en-IN">Simple English</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="mode-select" id="mode-label">⚡ Jawab:</label>
+        <select id="mode-select" name="mode">
+          <option value="voice_concise" id="opt-mode-concise" selected>Chhota (2–3 Line)</option>
+          <option value="detailed_plan" id="opt-mode-detailed">Poori Jankari</option>
+        </select>
+      </div>
+
+      <a href="#routine-planner" class="nav-jump-btn" id="nav-routine-btn">🏡 Routine Plan</a>
+
+      <button type="button" id="theme-toggle-btn" class="theme-toggle-btn" title="Switch Day / Night background">
+        <span class="theme-opt-to-light">☀️ <span class="visually-hidden">Switch to light day theme</span>Day</span>
+        <span class="theme-opt-to-dark">🌙 <span class="visually-hidden">Switch to dark night theme</span>Night</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content" class="page-shell" tabindex="-1">
+    <!-- ABOVE THE FOLD HERO: Big Traffic-Light Air Signal + Visual Smoke Icons + Huge Glowing Mic Orb -->
+    <section class="hero-zone" aria-label="Live Air Status and Voice Assistant">
+      <article class="hero-air-card" id="meter-card">
+        <div class="air-top-row">
+          <div class="traffic-lights" aria-hidden="true">
+            <span class="light-dot red" id="light-red"></span>
+            <span class="light-dot orange active" id="light-orange"></span>
+            <span class="light-dot green" id="light-green"></span>
+          </div>
+          <div class="meter-info">
+            <h2 id="meter-title">🟠 Aapke Ilake Ki Hawa Check Ho Rahi Hai...</h2>
+            <p id="meter-subtitle">Thoda intezaar karein, abhi live hawa aur suraksha salah aa rahi hai...</p>
+          </div>
+        </div>
+
+        <div class="cig-visual-row" id="cig-visual-row">
+          <span class="cig-icons" id="cig-icons" aria-hidden="true">🚬🚬</span>
+          <span class="cig-explain" id="cig-explain">Live dhuan check ho raha hai...</span>
+        </div>
+
+        <div class="location-weather-meta" id="exact-location-meta">
+          📍 Detecting exact street &amp; live weather...
+        </div>
+
+        <div class="hero-audio-actions">
+          <button type="button" class="btn-big-listen" id="meter-speak-btn">🔊 Aaj Ka Poora Haal Sunein</button>
+          <button type="button" class="btn-emergency" id="emergency-btn">🆘 Saans Phool Rahi Hai?</button>
+        </div>
+
+        <div class="clock-strip" id="clock-card">
+          <div class="clock-row">
+            <div class="clock-info">
+              <h3 id="clock-title">⏰ Khidki Kholne Ka Sahi Samay Check Ho Raha Hai...</h3>
+              <p id="clock-subtitle">Dopahar ki dhoop mein sabse saaf samay dekhein.</p>
+            </div>
+            <button type="button" class="meter-speak-btn" id="clock-speak-btn">🔊 Samay Sunein</button>
+          </div>
+          <div id="hourly-strip-wrap" hidden>
+            <div class="hourly-strip-header">
+              <span id="hourly-heading">📊 Aaj Har 2 Ghante Ki Hawa</span>
+              <span id="hourly-best-badge"></span>
+            </div>
+            <div class="hourly-bars" id="hourly-bars" role="img" aria-label="Hourly air quality forecast chart"></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- HUGE VOICE ORB RIGHT AT THE TOP (Zero scrolling for non-readers!) -->
+      <aside class="orb-card" aria-label="Voice Controls">
+        <div class="orb-wrapper" id="orb-wrapper">
+          <div class="orb-ring"></div>
+          <button type="button" class="orb-button" id="mic-btn" aria-label="Tap to speak your question">🎙️</button>
+        </div>
+
+        <div class="soundwave" id="soundwave" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="voice-status" id="voice-status">🎙️ Mic Dabakar Apni Bhasha Mein Bolein</div>
+        <p class="voice-subtext" id="voice-subtext">
+          Likhne ki zaroorat nahi—bas dabakar poochhein, VayuMitra bolkar batayega!
+        </p>
+
+        <div class="voice-actions">
+          <button type="button" class="btn-secondary" id="handsfree-btn" aria-pressed="false">📞 Lagataar Baat: OFF</button>
+          <button type="button" class="btn-secondary" id="stop-tts-btn">🔇 Chup</button>
+          <button type="button" class="btn-secondary" id="replay-tts-btn">🔊 Phir Sunein</button>
+        </div>
+
+        <div class="hero-quick-buttons">
+          <button type="button" class="btn-hero-photo" id="hero-photo-btn">📷 Aasman / Kamra Photo</button>
+          <button type="button" class="btn-whatsapp" id="whatsapp-btn">📲 WhatsApp Par Bhejein</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- 4 LIVE TAP-TO-HEAR PICTURE ACTION TILES (Instant visual + audio guidance without reading!) -->
+    <div class="picture-guide-strip">
+      <div class="section-mini-title">
+        <span id="pic-guide-title">👆 Kisi Bhi Photo Card Par Dabakar Turant Sunein (Bina Padhe)</span>
+      </div>
+      <div class="picture-tiles-grid">
+        <button type="button" class="pic-tile status-warn" id="tile-mask">
+          <div class="pic-tile-top">
+            <span class="pic-emoji" aria-hidden="true">😷</span>
+            <span class="pic-badge" id="tile-mask-badge">...</span>
+          </div>
+          <span class="pic-title" id="tile-mask-title">Mask / Gamchha</span>
+          <span class="pic-sub" id="tile-mask-sub">Check ho raha hai...</span>
+        </button>
+
+        <button type="button" class="pic-tile status-warn" id="tile-window">
+          <div class="pic-tile-top">
+            <span class="pic-emoji" aria-hidden="true">🪟</span>
+            <span class="pic-badge" id="tile-window-badge">...</span>
+          </div>
+          <span class="pic-title" id="tile-window-title">Ghar Ki Khidki</span>
+          <span class="pic-sub" id="tile-window-sub">Check ho raha hai...</span>
+        </button>
+
+        <button type="button" class="pic-tile status-warn" id="tile-family">
+          <div class="pic-tile-top">
+            <span class="pic-emoji" aria-hidden="true">👶👴</span>
+            <span class="pic-badge" id="tile-family-badge">...</span>
+          </div>
+          <span class="pic-title" id="tile-family-title">Bacche &amp; Buzurg</span>
+          <span class="pic-sub" id="tile-family-sub">Check ho raha hai...</span>
+        </button>
+
+        <button type="button" class="pic-tile status-safe" id="tile-home">
+          <div class="pic-tile-top">
+            <span class="pic-emoji" aria-hidden="true">🧹💧</span>
+            <span class="pic-badge" id="tile-home-badge">Geela Pochha ✅</span>
+          </div>
+          <span class="pic-title" id="tile-home-title">Ghar Ki Safai</span>
+          <span class="pic-sub" id="tile-home-sub">Sookha jhadu mat lagayein, geela pochha karein</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- One-Tap Family Profile Bar -->
+    <nav class="profile-bar" aria-label="Family Member Profile">
+      <span class="profile-label" id="profile-label">👨‍👩‍👧‍👦 Kiske Liye Salah:</span>
+      <button type="button" class="profile-btn active" aria-pressed="true" id="prof-all"
+        data-profile="Sabhi Parivar (Whole Family)">👨‍👩‍👧 Poora Parivar</button>
+      <button type="button" class="profile-btn" aria-pressed="false" id="prof-elderly"
+        data-profile="Buzurg aur Dama ke Mareez (Elderly & Asthma Patients)">👴 Buzurg / Dama</button>
+      <button type="button" class="profile-btn" aria-pressed="false" id="prof-kids"
+        data-profile="Chhote Bacche (Young Children)">👶 Chhote Bacche</button>
+      <button type="button" class="profile-btn" aria-pressed="false" id="prof-worker"
+        data-profile="Auto Driver / Mazdoor / Bahar Kaam Karne Wale (Outdoor Daily Worker)">🛺 Auto / Bahar Kaam</button>
+      <button type="button" class="profile-btn" aria-pressed="false" id="prof-pregnant"
+        data-profile="Garbhvati Mahila (Pregnant Mother)">🤰 Garbhvati Maa</button>
+      <button type="button" class="profile-ask-btn" id="ask-profile-btn">💡 Inki Salah Sunein</button>
+    </nav>
+
+    <!-- Live Synced Voice/Vision Chat + 4 Quick Tap Pillars -->
+    <div class="chat-and-pillars">
+      <div class="chat-panel">
+        <div class="chat-header">
+          <h2 id="chat-heading">💬 VayuMitra Baat-Cheet (Sunne Ke Liye 🔊 Dabayein)</h2>
+          <div class="chat-header-actions">
+            <button type="button" class="btn-new-chat" id="new-chat-btn">🗑️ Nayi Baat</button>
+            <span class="live-pill" id="voice-indicator-pill">🟢 Voice Ready</span>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages" aria-live="polite">
+          <div class="msg assistant" id="initial-welcome-msg">Namaste! Main VayuMitra hoon. Upar '🔊 Aaj Ka Haal Sunein' ya bada 🎙️ Mic dabakar bolkar poochhein!</div>
+        </div>
+
+        <div class="quick-chips">
+          <button type="button" class="chip" id="chip-1"
+            data-prompt="Aaj hamare yahan hawa kaisi hai? Kya bacche aur buzurg bahar ja sakte hain?">
+            🌫️ "Aaj bahar ki hawa kaisi hai?"
+          </button>
+          <button type="button" class="chip" id="chip-2"
+            data-prompt="Main bahar kaam karta hoon, bina paise kharch kiye dhuein se apni saans kaise bachaun?">
+            🛺 "Bina paise dhuein se kaise bachein?"
+          </button>
+          <button type="button" class="chip" id="chip-3"
+            data-prompt="Bina mehengi machine ke ghar ki hawa saaf kaise rakhein?">
+            🪴 "Ghar ki hawa saaf kaise rakhein?"
+          </button>
+        </div>
+
+        <div id="pending-photo-bar" class="pending-photo-bar" hidden>
+          <div class="pending-photo-meta">
+            <img id="pending-photo-thumb" class="pending-photo-thumb" alt="Selected photo preview" />
+            <span id="pending-photo-info">Photo ready — press Ask</span>
+          </div>
+          <button type="button" id="remove-photo-btn" class="btn-remove-photo">✕</button>
+        </div>
+
+        <form id="chat-form" class="chat-form" action="/api/chat" method="POST" aria-labelledby="chat-heading">
+          <input type="file" id="photo-input" name="photo" accept="image/*" capture="environment" class="visually-hidden" />
+          <button type="button" class="btn-camera" id="camera-btn">📷 Photo</button>
+          <label for="chat-input" class="visually-hidden">Write or speak your message</label>
+          <textarea id="chat-input" name="message" rows="1" enterkeyhint="send"
+            placeholder="🎙️ Bolein, 📷 photo bhejein, ya yahan likhein..."></textarea>
+          <button type="submit" id="send-button" class="btn-submit">Poochhein</button>
+        </form>
+      </div>
+
+      <div class="pillars-card">
+        <h2 id="pillars-heading">4 Zaroori Baatein (Dabakar Sunein)</h2>
+        <button type="button" class="pillar-item" id="pillar-1"
+          data-prompt="Aaj bahar kaam par ya bacchon ko le jaate waqt kis samay niklein aur dhuein se kaise bachein?">
+          <strong id="p1-title">1. 😷 Bahar Nikalne Ka Samay</strong>
+          <span id="p1-desc">Subah-shaam dhuein se bachav aur mask/gamchha</span>
+        </button>
+        <button type="button" class="pillar-item" id="pillar-2"
+          data-prompt="Ghar ke andar dhuan aur dhool na aaye iske liye bina kharche ke kya karein?">
+          <strong id="p2-title">2. 🏠 Ghar Ki Hawa Saaf Rakhna</strong>
+          <span id="p2-desc">Saaf samay mein khidki, geela pochha aur Tulsi</span>
+        </button>
+        <button type="button" class="pillar-item" id="pillar-3"
+          data-prompt="Thand mein kachra ya lakdi jalane se kya nuksan hota hai aur aane-jaane ke liye kya karein?">
+          <strong id="p3-title">3. 🚇 Dhuan Kam Karne Ke Upay</strong>
+          <span id="p3-desc">Bus/Metro/Sajha Auto aur kachra na jalana</span>
+        </button>
+        <button type="button" class="pillar-item" id="pillar-4"
+          data-prompt="Bilkul aasan bhasha mein poori jankari do ki aaj ke gande dhuein se bacchon aur buzurgo ke fefdon ko kaise bachayein.">
+          <strong id="p4-title">4. 🌱 Bacchon Aur Buzurgo Ki Suraksha</strong>
+          <span id="p4-desc">Fefdon aur saans ko bimari se bachane ka poora plan</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ZERO-TYPING PICTURE-TAP FAMILY DAILY ROUTINE PLANNER (Challenge 06 Core Workflow) -->
+    <section id="routine-planner" class="routine-section" aria-labelledby="routine-heading">
+      <div class="routine-header">
+        <div>
+          <h2 id="routine-heading">🏡 Mera Roz Ka Kaam — Parivar Plan (Sirf Chitra Chunein)</h2>
+          <p id="routine-sub">Likhne ki zaroorat nahi! Bas neeche photo-button chunein aur apna kam-dhuan, ghar-suraksha aur bachat plan paayein.</p>
+        </div>
+        <div class="routine-presets">
+          <span class="preset-label" id="preset-label">⚡ Turant Chunein:</span>
+          <button type="button" class="preset-btn" data-preset="office" id="preset-office">🚗 Office + School</button>
+          <button type="button" class="preset-btn" data-preset="senior" id="preset-senior">👴 Buzurg + Ghar Par</button>
+          <button type="button" class="preset-btn" data-preset="worker" id="preset-worker">🛺 Auto / Mazdoor</button>
+        </div>
+      </div>
+
+      <form id="routine-form" class="routine-form" action="/api/routine-plan" method="POST" aria-labelledby="routine-heading">
+        <div class="routine-two-col">
+          <fieldset class="tap-fieldset">
+            <legend id="leg-commute">1. Roz Kaise Aate-Jaate Hain? (Safar)</legend>
+            <div class="tap-grid">
+              <div class="tap-choice">
+                <input type="radio" id="cm-walk" name="commute_mode" value="walk_cycle" />
+                <label for="cm-walk" id="lbl-opt-walk">🚶 Paidal / Cycle</label>
+              </div>
+              <div class="tap-choice">
+                <input type="radio" id="cm-scooter" name="commute_mode" value="petrol_scooter" checked />
+                <label for="cm-scooter" id="lbl-opt-scooter">🛵 Scooter / Bike</label>
+              </div>
+              <div class="tap-choice">
+                <input type="radio" id="cm-auto" name="commute_mode" value="auto_cab" />
+                <label for="cm-auto" id="lbl-opt-auto">🛺 Auto / Cab</label>
+              </div>
+              <div class="tap-choice">
+                <input type="radio" id="cm-car" name="commute_mode" value="petrol_car" />
+                <label for="cm-car" id="lbl-opt-car">🚗 Car</label>
+              </div>
+              <div class="tap-choice">
+                <input type="radio" id="cm-bus" name="commute_mode" value="bus_metro" />
+                <label for="cm-bus" id="lbl-opt-bus">🚇 Bus / Metro</label>
+              </div>
+            </div>
+            <div class="number-inline-row">
+              <label for="commute-km" id="lbl-km-custom">Roz ki doori (km):</label>
+              <input type="number" id="commute-km" name="commute_km_per_day" value="18" min="0" max="200" step="1"
+                inputmode="numeric" required data-error="commute-km-error" />
+              <span id="commute-km-error" class="field-error">0–200 km</span>
+              <button type="button" class="btn-secondary" data-km="5">5 km</button>
+              <button type="button" class="btn-secondary" data-km="15">15 km</button>
+              <button type="button" class="btn-secondary" data-km="30">30 km</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="tap-fieldset">
+            <legend id="leg-cooking">2. Ghar Mein Khana Kis Par Banta Hai?</legend>
+            <div class="tap-grid">
+              <div class="tap-choice">
+                <input type="radio" id="ck-lpg" name="cooking_fuel" value="lpg" checked />
+                <label for="ck-lpg" id="lbl-opt-lpg">🔥 LPG Gas</label>
+              </div>
+              <div class="tap-choice">
+                <input type="radio" id="ck-ind" name="cooking_fuel" value="induction" />
+                <label for="ck-ind" id="lbl-opt-induction">⚡ Bijli / Induction</label>
+              </div>
+              <div class="tap-choice">
+                <input type="radio" id="ck-wood" name="cooking_fuel" value="biomass_wood" />
+                <label for="ck-wood" id="lbl-opt-wood">🪵 Lakdi / Koyla Chulha</label>
+              </div>
+            </div>
+            <div class="number-inline-row">
+              <label for="outdoor-hours" id="lbl-outdoor-hrs">Bahar dhuein mein ghante:</label>
+              <input type="number" id="outdoor-hours" name="outdoor_hours_peak" value="2" min="0" max="14" step="0.5"
+                inputmode="decimal" required data-error="outdoor-hours-error" />
+              <span id="outdoor-hours-error" class="field-error">0–14 hrs</span>
+              <button type="button" class="btn-secondary" data-hrs="1">1 hr</button>
+              <button type="button" class="btn-secondary" data-hrs="3">3 hrs</button>
+              <button type="button" class="btn-secondary" data-hrs="7">7 hrs</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="routine-submit-row">
+          <fieldset class="tap-fieldset" style="flex: 1;">
+            <legend id="leg-members">3. Ghar Mein Kaun-Kaun Hai Aur Adatein?</legend>
+            <div class="tap-grid">
+              <div class="tap-choice">
+                <input type="checkbox" id="mem-kids" name="household_members" value="kids" checked />
+                <label for="mem-kids" id="lbl-mem-kids">👶 Bacche</label>
+              </div>
+              <div class="tap-choice">
+                <input type="checkbox" id="mem-elderly" name="household_members" value="elderly" checked />
+                <label for="mem-elderly" id="lbl-mem-elderly">👴 Buzurg / Dama</label>
+              </div>
+              <div class="tap-choice">
+                <input type="checkbox" id="mem-worker" name="household_members" value="outdoor_worker" />
+                <label for="mem-worker" id="lbl-mem-worker">🛺 Bahar Kaam</label>
+              </div>
+              <div class="tap-choice">
+                <input type="checkbox" id="mem-pregnant" name="household_members" value="pregnant" />
+                <label for="mem-pregnant" id="lbl-mem-pregnant">🤰 Garbhvati Maa</label>
+              </div>
+              <div class="tap-choice">
+                <input type="checkbox" id="habit-exhaust" name="has_chimney_exhaust" value="true" />
+                <label for="habit-exhaust" id="lbl-habit-exhaust">🌀 Kitchen Exhaust Hai</label>
+              </div>
+              <div class="tap-choice">
+                <input type="checkbox" id="habit-waste" name="burns_waste_or_incense" value="true" />
+                <label for="habit-waste" id="lbl-habit-waste">🔥 Kachra / Patte / Agarbatti</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <button type="submit" id="build-plan-btn" class="btn-primary-plan">✨ Mera Parivar Plan Banayein</button>
+        </div>
+      </form>
+
+      <div id="routine-results" class="routine-results" hidden>
+        <div class="results-toolbar">
+          <h3 id="plan-ready-title">✅ Aapka Aasan Parivar Suraksha Plan</h3>
+          <div class="results-actions">
+            <button type="button" class="btn-big-listen" style="min-height:40px;padding:0.4rem 0.9rem;font-size:0.82rem;" id="speak-plan-btn">🔊 Poora Plan Sunein</button>
+            <button type="button" class="btn-secondary" id="share-plan-btn">📲 WhatsApp Plan Bhejein</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-co2-val">—</div>
+            <div class="kpi-label" id="kpi-co2-lbl">Har Hafte Dhuan Kam (CO₂)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-exposure-val">—</div>
+            <div class="kpi-label" id="kpi-exposure-lbl">Saans Ka Nuksan Kam</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-savings-val">—</div>
+            <div class="kpi-label" id="kpi-savings-lbl">Mahine Ki Petrol Bachat</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-trees-val">—</div>
+            <div class="kpi-label" id="kpi-trees-lbl">Saal Bhar Ped Barabar</div>
+          </div>
+        </div>
+
+        <div class="plan-cards-grid">
+          <article class="plan-card">
+            <h4 id="card-low-emission-title">🌱 Kam Dhuan Karne Ke Kadam</h4>
+            <ul id="list-low-emission"></ul>
+          </article>
+          <article class="plan-card indoor">
+            <h4 id="card-indoor-hacks-title">🏠 Ghar Ki Hawa Saaf Upay</h4>
+            <ul id="list-indoor-hacks"></ul>
+          </article>
+          <article class="plan-card impact">
+            <h4 id="card-impact-insights-title">📊 Parivar Aur Sehat Par Asar</h4>
+            <ul id="list-impact-insights"></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer-note">
+    VayuMitra AI • Har Parivar Ka Aasan Hawa Suraksha Sathi • Live Open-Meteo AQI + Gemini AI
+  </footer>
+
+  <script src="/i18n.js?v=4"></script>
+  <script src="/app.js?v=4"></script>
+</body>
+
+</html>
